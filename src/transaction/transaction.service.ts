@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Transaction, TRANSACTION_TYPE } from './entities/transaction.entity';
-import { Brackets, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { VirtualAccount } from 'src/virtual-account/entities/virtual-account.entity';
 import { TopUpDto } from './dto/top-up.dto';
 import { User } from 'src/user/entities/user.entity';
@@ -57,18 +57,18 @@ export class TransactionService {
     }
 
     // Create the debit transaction
-    const debit = new Transaction();
-    debit.amount = createTransactionDto.amount;
-    debit.type = TRANSACTION_TYPE.Debit;
-    debit.senderAccount = fromAccount;
-    debit.receiverAccount = account;
+    const transaction = new Transaction();
+    transaction.amount = createTransactionDto.amount;
+    transaction.type = TRANSACTION_TYPE.Debit;
+    transaction.senderAccount = fromAccount;
+    transaction.receiverAccount = account;
 
     // Create the credit transaction
-    const credit = new Transaction();
-    credit.amount = createTransactionDto.amount;
-    credit.type = TRANSACTION_TYPE.Credit;
-    credit.senderAccount = fromAccount;
-    credit.receiverAccount = account;
+    // const credit = new Transaction();
+    // credit.amount = createTransactionDto.amount;
+    // credit.type = TRANSACTION_TYPE.Credit;
+    // credit.senderAccount = fromAccount;
+    // credit.receiverAccount = account;
 
     // Update balances
     fromAccount.balance -= createTransactionDto.amount;
@@ -78,7 +78,7 @@ export class TransactionService {
     await this.accountRepository.manager.transaction(async (entityManager) => {
       await entityManager.save(fromAccount);
       await entityManager.save(account);
-      await entityManager.save([debit, credit]);
+      await entityManager.save(transaction);
     });
   }
 
@@ -124,27 +124,7 @@ export class TransactionService {
         .leftJoinAndSelect('senderAccount.user', 'senderUser')
         .leftJoinAndSelect('receiverAccount.user', 'receiverUser')
         .where('senderAccount.user.id = :userId', { userId: user.id })
-        .andWhere('transaction.type = :debitType', {
-          debitType: TRANSACTION_TYPE.Debit,
-        })
-        .orWhere(
-          new Brackets((qb) => {
-            qb.where('receiverAccount.user.id = :userId', {
-              userId: user.id,
-            }).andWhere('transaction.type = :creditType', {
-              creditType: TRANSACTION_TYPE.Credit,
-            });
-          }),
-        )
-        .orWhere(
-          new Brackets((qb) => {
-            qb.where('receiverAccount.user.id = :userId', {
-              userId: user.id,
-            }).andWhere('transaction.type = :creditType', {
-              creditType: TRANSACTION_TYPE.TopUp,
-            });
-          }),
-        )
+        .orWhere('receiverAccount.user.id = :userId', { userId: user.id })
         .getMany(),
     );
   }

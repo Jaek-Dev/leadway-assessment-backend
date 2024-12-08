@@ -29,7 +29,11 @@ export class UserController {
     const account = (await this.accountService.findUserAccount(
       request.user as User,
     )) as VirtualAccount;
-    return { ...request.user, balance: account.balance };
+    return {
+      ...request.user,
+      balance: account.balance,
+      accountNumber: account.accountNumber,
+    };
   }
 
   @Patch(':id')

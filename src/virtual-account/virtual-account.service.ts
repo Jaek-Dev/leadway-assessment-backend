@@ -1,26 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { CreateVirtualAccountDto } from './dto/create-virtual-account.dto';
-import { UpdateVirtualAccountDto } from './dto/update-virtual-account.dto';
+import { User } from 'src/user/entities/user.entity';
+import { Repository } from 'typeorm';
+import { VirtualAccount } from './entities/virtual-account.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class VirtualAccountService {
-  create(createVirtualAccountDto: CreateVirtualAccountDto) {
-    return 'This action adds a new virtualAccount';
-  }
+  constructor(
+    @InjectRepository(VirtualAccount)
+    private readonly accountRepository: Repository<VirtualAccount>,
+  ) {}
 
-  findAll() {
-    return `This action returns all virtualAccount`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} virtualAccount`;
-  }
-
-  update(id: number, updateVirtualAccountDto: UpdateVirtualAccountDto) {
-    return `This action updates a #${id} virtualAccount`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} virtualAccount`;
+  findUserAccount(user: User) {
+    return this.accountRepository.findOneBy({
+      user: { id: user.id },
+    });
   }
 }

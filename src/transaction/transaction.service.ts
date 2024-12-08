@@ -125,6 +125,7 @@ export class TransactionService {
         .leftJoinAndSelect('receiverAccount.user', 'receiverUser')
         .where('senderAccount.user.id = :userId', { userId: user.id })
         .orWhere('receiverAccount.user.id = :userId', { userId: user.id })
+        .orderBy({ 'transaction.id': 'DESC' })
         .getMany(),
     );
   }
